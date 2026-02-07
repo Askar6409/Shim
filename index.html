@@ -2,97 +2,147 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>شیم گیری پژو 405</title>
+<title>شیم گیری پژو 405 XU7</title>
 <style>
 body {
-  background: #0f0f0f;
+  background: #0c0c0c;
   color: white;
   font-family: Tahoma;
   text-align: center;
-  padding: 20px;
+  padding: 15px;
 }
 
 .box {
-  max-width: 480px;
+  max-width: 700px;
   margin: auto;
   background: #1a1a1a;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 0 18px rgba(0,255,120,0.4);
+  padding: 15px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,255,120,0.35);
 }
 
-select, input {
-  width: 92%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 10px;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #333;
+  padding: 8px;
+  font-size: 14px;
+}
+
+th {
+  background: #111;
+}
+
+input {
+  width: 80px;
+  padding: 6px;
+  border-radius: 8px;
   border: none;
-  font-size: 16px;
+  text-align: center;
 }
 
 button {
-  background: #00ff99;
-  border: none;
-  padding: 14px 35px;
+  margin-top: 12px;
+  padding: 12px 25px;
   border-radius: 12px;
-  font-size: 18px;
+  border: none;
+  background: #00ff99;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .result {
-  margin-top: 15px;
-  font-size: 20px;
   color: #00ff99;
+  font-weight: bold;
 }
 </style>
 </head>
 <body>
 
 <div class="box">
-<h2>🛠 شیم گیری پژو 405 (XU7)</h2>
+<h2>🛠 شیم گیری پژو 405 — XU7</h2>
+<p>دود = 0.45 | هوا/بنزین = 0.25 | شیم بازار: 2.00 تا 4.00 (0.05)</p>
 
-<select id="type">
-  <option value="intake">هوا / بنزین (0.25)</option>
-  <option value="exhaust">دود (0.45)</option>
-</select>
+<table>
+<tr>
+<th>سوپاپ</th>
+<th>نوع</th>
+<th>فیلر اندازه‌گیری</th>
+<th>شیم فعلی</th>
+<th>شیم نهایی</th>
+</tr>
 
-<input type="number" step="0.01" id="measured" placeholder="فیلر اندازه‌گیری شده (mm)">
-<input type="number" step="0.01" id="shimBase" value="3.00" placeholder="شیم فعلی (mm)">
+<tbody id="rows"></tbody>
+</table>
 
-<button onclick="calc()">محاسبه شیم نهایی</button>
-
-<div class="result" id="result"></div>
+<button onclick="calcAll()">محاسبه همه شیم‌ها</button>
 </div>
 
 <script>
-function roundTo005(value) {
-  return Math.round(value / 0.05) * 0.05;
+const valves = [
+  {name:"1 هوا", type:"intake"},
+  {name:"2 هوا", type:"intake"},
+  {name:"3 هوا", type:"intake"},
+  {name:"4 هوا", type:"intake"},
+  {name:"1 دود", type:"exhaust"},
+  {name:"2 دود", type:"exhaust"},
+  {name:"3 دود", type:"exhaust"},
+  {name:"4 دود", type:"exhaust"}
+];
+
+const tbody = document.getElementById("rows");
+
+valves.forEach((v,i)=>{
+  let row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${v.name}</td>
+    <td>${v.type === "intake" ? "هوا / بنزین" : "دود"}</td>
+    <td><input type="number" step="0.01" id="meas${i}" placeholder="مثلاً 0.50"></td>
+    <td><input type="number" step="0.01" value="3.00" id="shim${i}"></td>
+    <td class="result" id="out${i}">—</td>
+  `;
+  tbody.appendChild(row);
+});
+
+function round005(val){
+  return Math.round(val / 0.05) * 0.05;
 }
 
-function calc() {
-  let measured = parseFloat(document.getElementById("measured").value);
-  let shimBase = parseFloat(document.getElementById("shimBase").value);
-  let type = document.getElementById("type").value;
+function calcAll(){
+  valves.forEach((v,i)=>{
+    let measured = parseFloat(document.getElementById(`meas${i}`).value);
+    let shimBase = parseFloat(document.getElementById(`shim${i}`).value);
+    let out = document.getElementById(`out${i}`);
 
-  if (isNaN(measured) || isNaN(shimBase)) {
-    document.getElementById("result").innerText = "⚠ مقادیر را کامل وارد کن";
-    return;
-  }
+    if(isNaN(measured) || isNaN(shimBase)){
+      out.innerText = "❌";
+      return;
+    }
 
-  let target = (type === "intake") ? 0.25 : 0.45;
+    let target = v.type === "intake" ? 0.25 : 0.45;
+    let diff = measured - target;
 
-  let rawShim = shimBase + (measured - target);
-  let finalShim = roundTo005(rawShim);
+    // منطق استاد موجی 😎
+    let newShim;
+    if(v.type === "exhaust"){
+      newShim = shimBase + diff; // دود → اضافه
+    } else {
+      newShim = shimBase - diff; // هوا → کم
+    }
 
-  let warning = "";
-  if (finalShim < 2.00) warning = "⚠ کمتر از شیم بازار!";
-  if (finalShim > 4.00) warning = "⚠ بیشتر از شیم بازار!";
+    newShim = round005(newShim);
 
-  document.getElementById("result").innerHTML =
-    "🎯 فیلر استاندارد: " + target + " mm<br>" +
-    "🔧 شیم نهایی پیشنهادی: <b>" + finalShim.toFixed(2) + " mm</b><br>" +
-    "<span style='color:#ffaa00'>" + warning + "</span>";
+    let warn = "";
+    if(newShim < 2.00) warn = " ⚠کم";
+    if(newShim > 4.00) warn = " ⚠زیاد";
+
+    out.innerText = newShim.toFixed(2) + " mm" + warn;
+  });
 }
 </script>
 

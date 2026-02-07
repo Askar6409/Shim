@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>نرم افزار شیم گیری</title>
+<style>
+body {
+  font-family: Tahoma;
+  background: #111;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+.box {
+  max-width: 420px;
+  margin: auto;
+  background: #1c1c1c;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,255,0,0.3);
+}
+
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+}
+
+button {
+  background: #00ff88;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result {
+  margin-top: 15px;
+  font-size: 20px;
+  color: #00ff88;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>🛠 نرم افزار شیم گیری</h2>
+
+<input type="number" id="measured" placeholder="اندازه فعلی (میلی‌متر)">
+<input type="number" id="target" placeholder="اندازه هدف (میلی‌متر)">
+
+<button onclick="calc()">محاسبه شیم</button>
+
+<div class="result" id="result"></div>
+</div>
+
+<script>
+function calc() {
+  let measured = parseFloat(document.getElementById("measured").value);
+  let target = parseFloat(document.getElementById("target").value);
+
+  if (isNaN(measured) || isNaN(target)) {
+    document.getElementById("result").innerText = "لطفا مقادیر را وارد کنید!";
+    return;
+  }
+
+  let shim = target - measured;
+
+  document.getElementById("result").innerText =
+    "🔧 ضخامت شیم مورد نیاز: " + shim.toFixed(3) + " mm";
+}
+</script>
+
+</body>
+</html>
